@@ -19,7 +19,7 @@ this tool is especially useful when you're choosing classes and feeling confused
 
 run the interactive chat assistant:
 ```bash
-uv run src/chat.py`
+uv run src/chat.py
 ```
 
 this will open a persistent chat session where you can ask multiple questions. context is maintained throughout the session.
