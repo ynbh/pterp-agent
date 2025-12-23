@@ -1,3 +1,4 @@
+from datetime import datetime
 from planet_terp import PlanetTerp
 from agents import function_tool
 
@@ -47,3 +48,13 @@ def get_grades(
     :param section: Show only grades for the given section. Default: all sections
     """
     return client.grades(course, professor, semester, section)
+
+
+# gemini 2.5 flash sucks with dates. maybe this helps?
+@function_tool
+def today():
+    """
+    Get the current date. 
+    """
+    return datetime.now().strftime("%Y-%m-%d")
+    

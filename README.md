@@ -17,15 +17,12 @@ this tool is especially useful when you're choosing classes and feeling confused
 
 ## usage
 
-run the chat assistant:
+run the interactive chat assistant:
 ```bash
-uv run src/chat.py
+uv run src/chat.py`
 ```
 
-to see tool logs, use the debug flag:
-```bash
-uv run src/chat.py "do a through analysis on CMSC451" --debug
-```
+this will open a persistent chat session where you can ask multiple questions. context is maintained throughout the session.
 
 ## project structure
 

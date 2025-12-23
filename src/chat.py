@@ -1,50 +1,99 @@
 import asyncio
 import argparse
+import sys
+import os
 from dotenv import load_dotenv
+from rich.console import Console
+from rich.markdown import Markdown
+from rich.panel import Panel
+from rich.text import Text
+from rich.prompt import Prompt
+
 from agents import Runner
 from agent import get_agent
 
-
-from rich.console import Console 
-from rich.markdown import Markdown 
-
 load_dotenv()
 
-async def main():
-    parser = argparse.ArgumentParser(description="Chat with the PlanetTerp Assistant.")
-    parser.add_argument("prompt", type=str, help="The prompt to send to the agent.", nargs="?")
+console = Console()
+
+async def chat():
+    parser = argparse.ArgumentParser(description="Interactive PlanetTerp Assistant.")
+    parser.add_argument("prompt", type=str, help="Initial prompt to send to the agent.", nargs="?")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging.")
     args = parser.parse_args()
 
     agent = get_agent()
-
-    prompt = args.prompt or "Do an analysis on Clyde Kruskal."
     
-    if args.debug:
-        print(f"Running agent with prompt: {prompt}")
+    # we maintain the conversation history as a list of items
+    conversation_history = []
 
-    result = await Runner.run(agent, prompt)
+    console.print(Panel(
+        Text("Welcome to PlanetTerp Agent!", style="bold blue", justify="center"),
+        border_style="red"
+    ))
+    console.print("Type 'exit' or 'quit' to end the session.\n")
 
-    console = Console()
-    MARKDOWN = result.final_output 
-    md = Markdown(MARKDOWN)
+    initial_prompt = args.prompt
+    first_turn = True
 
-    console.print(md)
+    while True:
+        try:
+            if first_turn and initial_prompt:
+                user_input = initial_prompt
+                first_turn = False
+                console.print(f"[bold green]You[/]: {user_input}")
+            else:
+                user_input = Prompt.ask("[bold green]You[/]")
+                first_turn = False
+            
+            if user_input.lower() in ["exit", "quit"]:
+                console.print("[bold red]Goodbye![/]")
+                break
 
-    if args.debug:
-        print("Tool Execution Log:")
-        found_tools = False
-        for item in result.new_items:
-            if hasattr(item, "type") and item.type == "tool_call_item":
-                found_tools = True
-                if hasattr(item.raw_item, "function"):
-                    fn = item.raw_item.function
-                    print(f"[Tool Call] {fn.name}({fn.arguments})")
-                else:
-                    print(f"[Tool Call] {item.raw_item}")
+            if not user_input.strip():
+                continue
 
-        if not found_tools:
-            print("No tools were called.")
+            # pass the whole conversation history + the new user input
+            # Runner.run(agent, input) where input can be a list of items
+            user_message = {"role": "user", "content": user_input}
+            current_input = conversation_history + [user_message]
+
+            with console.status("[bold blue]Agent is thinking...", spinner="dots"):
+                result = await Runner.run(agent, input=current_input)
+            
+            # update history using to_input_list() which captures the full context
+            conversation_history = result.to_input_list()
+
+            console.print("\n[bold blue]PlanetTerp Agent[/]")
+            console.print(Markdown(result.final_output))
+            console.print("-" * console.width)
+
+            if args.debug:
+                found_tools = False
+                debug_text = Text("\nTool Execution Log:", style="dim italic")
+                for item in result.new_items:
+                    if hasattr(item, "type") and item.type == "tool_call_item":
+                        found_tools = True
+                        if hasattr(item.raw_item, "function"):
+                            fn = item.raw_item.function
+                            debug_text.append(f"\n[Tool Call] {fn.name}({fn.arguments})", style="yellow")
+                        else:
+                            debug_text.append(f"\n[Tool Call] {item.raw_item}", style="yellow")
+                
+                if found_tools:
+                    console.print(debug_text)
+                    console.print("-" * console.width)
+
+        except KeyboardInterrupt:
+            console.print("\n[bold red]Interrupted. Goodbye![/]")
+            break
+        except Exception as e:
+            if args.debug:
+                import traceback
+                console.print(f"\n[bold red]Error:[/] {e}")
+                console.print(traceback.format_exc())
+            else:
+                console.print(f"\n[bold red]Error:[/] {e}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(chat())

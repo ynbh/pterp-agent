@@ -6,7 +6,7 @@ from agents import (
     set_default_openai_api,
     set_tracing_disabled,
 )
-from tools import get_course, get_professor, get_grades, search_planet_terp
+from tools import get_course, get_professor, get_grades, search_planet_terp, today
 
 def get_agent():
     client = AsyncOpenAI(
@@ -24,7 +24,15 @@ def get_agent():
     agent = Agent(
         name="PlanetTerp Agent",
         model="gemini-2.5-flash", 
-        instructions="You are a helpful assistant for University of Maryland students. Use the provided tools to fetch information about professors and courses. You should ALWAYS reply in Markdown.",
-        tools=[get_professor, get_course, get_grades, search_planet_terp],
+        instructions=
+        """\
+        You are a helpful assistant for University of Maryland students. Use the provided tools to fetch information about professors and courses. You should ALWAYS reply in Markdown.
+        For any query involving DATES, always use the `today` tool.
+        For example, if a user asks something about 2025:
+         - Get the current date using a call to `today` first 
+         - Then appropriately decide what to do based on the query itself. 
+        """.strip(),
+
+        tools=[get_professor, get_course, get_grades, search_planet_terp, today],
     )
     return agent
