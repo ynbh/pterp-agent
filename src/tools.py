@@ -4,23 +4,43 @@ from agents import function_tool
 
 client = PlanetTerp()
 
+
 @function_tool
 def get_professor(name: str, reviews: bool = False):
     """
     Get information about a professor from PlanetTerp.
     :param name: The name of the professor.
-    :param reviews: Whether to include reviews. 
+    :param reviews: Whether to include reviews.
     """
-    return client.professor(name, reviews)
+
+    prof = None
+
+    try:
+        prof = client.professor(name, reviews)
+    except Exception as e:
+        return f"Professor '{name}' not found. If you only provided a last name, please use the `search_planet_terp` tool with the last name to find the correct full name."
+    if prof is None:
+        return f"Professor '{name}' not found. If you only provided a last name, please use the `search_planet_terp` tool with the last name to find the correct full name."
+    return prof
+
 
 @function_tool
 def get_course(name: str, reviews: bool = False):
     """
     Get information about a course from PlanetTerp.
-    :param name: The name of the course. E.g. CMSC330 
+    :param name: The name of the course. E.g. CMSC330
     :param reviews: Whether to include reviews.
     """
-    return client.course(name, reviews)
+    course_data = None
+
+    try:
+        course_data = client.course(name, reviews)
+    except Exception as e:
+        return f"Course '{name}' not found. Please double check the course code (e.g., CMSC330)."
+    if course_data is None:
+        return f"Course '{name}' not found. Please double check the course code (e.g., CMSC330)."
+    return course_data
+
 
 @function_tool
 def search_planet_terp(query: str, limit: int, offset: int):
@@ -32,16 +52,14 @@ def search_planet_terp(query: str, limit: int, offset: int):
     """
     return client.search(query, limit, offset)
 
+
 @function_tool
 def get_grades(
-    course: str = None, 
-    professor: str = None, 
-    semester: str = None, 
-    section: str = None
+    course: str = None, professor: str = None, semester: str = None, section: str = None
 ):
     """
     Get grades for a course from PlanetTerp.
-    
+
     :param course: Show only grades for the given course. Example: MATH140
     :param professor: Show only grades for the given professor. Example: Jon Snow
     :param semester: Show only grades for the given semester. Semester should be provided as the year followed by the semester code. 01 means Spring and 08 means Fall. For example, 202001 means Spring 2020. Default: all semesters
@@ -52,15 +70,12 @@ def get_grades(
 
 @function_tool
 def get_grades_report(
-    course: str = None, 
-    professor: str = None, 
-    semester: str = None, 
-    section: str = None
+    course: str = None, professor: str = None, semester: str = None, section: str = None
 ):
     """
-    Get an aggregated grade report for a course/professor. 
+    Get an aggregated grade report for a course/professor.
     This tool calculates total counts and percentages accurately.
-    
+
     :param course: Filter by course. Example: MATH140
     :param professor: Filter by professor. Example: Jon Snow
     :param semester: Filter by semester (e.g., 202001 for Spring 2020).
@@ -69,16 +84,26 @@ def get_grades_report(
     res = client.grades(course, professor, semester, section)
     if not res:
         return "No grade data found for the given filters."
-    
+
     # Initialize totals
     totals = {
-        "A+": 0, "A": 0, "A-": 0,
-        "B+": 0, "B": 0, "B-": 0,
-        "C+": 0, "C": 0, "C-": 0,
-        "D+": 0, "D": 0, "D-": 0,
-        "F": 0, "W": 0, "Other": 0
+        "A+": 0,
+        "A": 0,
+        "A-": 0,
+        "B+": 0,
+        "B": 0,
+        "B-": 0,
+        "C+": 0,
+        "C": 0,
+        "C-": 0,
+        "D+": 0,
+        "D": 0,
+        "D-": 0,
+        "F": 0,
+        "W": 0,
+        "Other": 0,
     }
-    
+
     for g in res:
         totals["A+"] += g.A_plus
         totals["A"] += g.A
@@ -100,22 +125,22 @@ def get_grades_report(
     if total_graded == 0:
         return "Total student count is 0."
 
-    percentages = {k: f"{(v/total_graded*100):.2f}%" for k, v in totals.items()}
-    
+    percentages = {k: f"{(v / total_graded * 100):.2f}%" for k, v in totals.items()}
+
     summary = {
         "Total Students": total_graded,
         "Grade Counts": totals,
         "Grade Percentages": percentages,
-        "A-range (A+/A/A-)": f"{((totals['A+']+totals['A']+totals['A-'])/total_graded*100):.2f}%",
-        "Pass Rate (>= C-)": f"{((total_graded - totals['D+'] - totals['D'] - totals['D-'] - totals['F'] - totals['W'] - totals['Other'])/total_graded*100):.2f}%"
+        "A-range (A+/A/A-)": f"{((totals['A+'] + totals['A'] + totals['A-']) / total_graded * 100):.2f}%",
+        "Pass Rate (>= C-)": f"{((total_graded - totals['D+'] - totals['D'] - totals['D-'] - totals['F'] - totals['W'] - totals['Other']) / total_graded * 100):.2f}%",
     }
-    
+
     return summary
+
 
 @function_tool
 def today():
     """
-    Get the current date. 
+    Get the current date.
     """
     return datetime.now().strftime("%Y-%m-%d")
-    

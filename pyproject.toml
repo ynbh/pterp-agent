@@ -9,6 +9,7 @@ dependencies = [
     "openai-agents>=0.6.4",
     "planet-terp-client>=0.1.6",
     "rich>=14.2.0",
+    "ruff>=0.14.10",
 ]
 
 [tool.uv.workspace]

@@ -1,31 +1,37 @@
-# planet-terp-agent
+# PlanetTerp Agent
 
-an ai assistant for university of maryland students powered by planetterp.
+AI assistant for UMD students using PlanetTerp and Reddit.
 
-this tool is especially useful when you're choosing classes and feeling confused about which professors to take or want to compare class grade data. it can analyze professor reviews, look up course details, and check historical grade distributions to help you make informed decisions.
+## Setup
 
-## setup
-
-1. install dependencies:
+1. Install dependencies:
    ```bash
    uv sync
    ```
-2. set your environment variables in `.env`:
-   ```bash
-   OPENAI_API_KEY=your_key_here
+2. Configure `.env`:
+   ```env
+   OPENAI_API_KEY=your_key
    ```
 
-## usage
+## Usage
 
-run the interactive chat assistant:
+Start the chat:
 ```bash
 uv run src/chat.py
 ```
 
-this will open a persistent chat session where you can ask multiple questions. context is maintained throughout the session.
+### Commands
+- `save`: Exports session to `conversations/`.
+- `exit`: Ends session.
+- `--debug`: Flag to show tool calls.
 
-## project structure
+## Features
 
-- `src/agent.py`: agent configuration and initialization.
-- `src/tools.py`: planetterp api tools including grades, search, and reviews.
-- `src/chat.py`: cli entry point with prompt and debug support.
+- Grade aggregation.
+- Reddit sentiment synthesis.
+- Professor disambiguation via course context.
+- Conversation exports.
+
+## Examples 
+
+Check out some examples of how to use this tool in [conversations](./conversations/).
