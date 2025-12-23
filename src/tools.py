@@ -50,7 +50,68 @@ def get_grades(
     return client.grades(course, professor, semester, section)
 
 
-# gemini 2.5 flash sucks with dates. maybe this helps?
+@function_tool
+def get_grades_report(
+    course: str = None, 
+    professor: str = None, 
+    semester: str = None, 
+    section: str = None
+):
+    """
+    Get an aggregated grade report for a course/professor. 
+    This tool calculates total counts and percentages accurately.
+    
+    :param course: Filter by course. Example: MATH140
+    :param professor: Filter by professor. Example: Jon Snow
+    :param semester: Filter by semester (e.g., 202001 for Spring 2020).
+    :param section: Filter by section.
+    """
+    res = client.grades(course, professor, semester, section)
+    if not res:
+        return "No grade data found for the given filters."
+    
+    # Initialize totals
+    totals = {
+        "A+": 0, "A": 0, "A-": 0,
+        "B+": 0, "B": 0, "B-": 0,
+        "C+": 0, "C": 0, "C-": 0,
+        "D+": 0, "D": 0, "D-": 0,
+        "F": 0, "W": 0, "Other": 0
+    }
+    
+    for g in res:
+        totals["A+"] += g.A_plus
+        totals["A"] += g.A
+        totals["A-"] += g.A_minus
+        totals["B+"] += g.B_plus
+        totals["B"] += g.B
+        totals["B-"] += g.B_minus
+        totals["C+"] += g.C_plus
+        totals["C"] += g.C
+        totals["C-"] += g.C_minus
+        totals["D+"] += g.D_plus
+        totals["D"] += g.D
+        totals["D-"] += g.D_minus
+        totals["F"] += g.F
+        totals["W"] += g.W
+        totals["Other"] += g.Other
+
+    total_graded = sum(totals.values())
+    if total_graded == 0:
+        return "Total student count is 0."
+
+    percentages = {k: f"{(v/total_graded*100):.2f}%" for k, v in totals.items()}
+    
+    summary = {
+        "Total Students": total_graded,
+        "Grade Counts": totals,
+        "Grade Percentages": percentages,
+        "A-range (A+/A/A-)": f"{((totals['A+']+totals['A']+totals['A-'])/total_graded*100):.2f}%",
+        "Pass Rate (>= C-)": f"{((total_graded - totals['D+'] - totals['D'] - totals['D-'] - totals['F'] - totals['W'] - totals['Other'])/total_graded*100):.2f}%"
+    }
+    
+    return summary
+
 @function_tool
 def today():
     """

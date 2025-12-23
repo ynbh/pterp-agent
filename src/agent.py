@@ -6,7 +6,7 @@ from agents import (
     set_default_openai_api,
     set_tracing_disabled,
 )
-from tools import get_course, get_professor, get_grades, search_planet_terp, today
+from tools import get_course, get_professor, get_grades, search_planet_terp, today, get_grades_report
 
 def get_agent():
     client = AsyncOpenAI(
@@ -31,8 +31,18 @@ def get_agent():
         For example, if a user asks something about 2025:
          - Get the current date using a call to `today` first 
          - Then appropriately decide what to do based on the query itself. 
+
+        For GRADE distributions or overall summaries:
+        1. Always use `get_grades_report`. It returns accurate totals and percentages calculated server-side.
+        2. Use `get_grades` ONLY if you need specific section-by-section details that aren't in the report.
+        3. Do NOT try to calculate percentages or sum large sections manually; rely on the report.
+
+        When a professor cannot be found by the provided name:
+        1. Use the `search_planet_terp` tool with the name as a query.
+        2. If you find multiple results, use the course context (if any) to shortlist the correct professor.
+        3. If there is no course context or the results are still ambiguous, ask the user to confirm which professor they meant from the search results.
         """.strip(),
 
-        tools=[get_professor, get_course, get_grades, search_planet_terp, today],
+        tools=[get_professor, get_course, get_grades, search_planet_terp, today, get_grades_report],
     )
     return agent
