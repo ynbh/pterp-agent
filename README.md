@@ -29,4 +29,3 @@ this will open a persistent chat session where you can ask multiple questions. c
 - `src/agent.py`: agent configuration and initialization.
 - `src/tools.py`: planetterp api tools including grades, search, and reviews.
 - `src/chat.py`: cli entry point with prompt and debug support.
-- `initpy.sh`: helper script to initialize new python projects.
